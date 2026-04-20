@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Alerts";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4 animate-fade-in stagger-1">
+    <div>
+        <h3 class="fw-bold mb-1 text-dark">System Alerts</h3>
+        <p class="text-muted mb-0">Notifications and anomalies</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 text-center text-muted animate-fade-in stagger-2" style="border-radius: 12px;">
+    <i class="bi bi-bell-slash fs-1 mb-3"></i>
+    <h5>No Alerts</h5>
+    <p>All attendance systems are operating nominally.</p>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('.sidebar-nav .nav-link[href="/Admin/Alerts"]')?.classList.add('active');
+        });
+    </script>
+}

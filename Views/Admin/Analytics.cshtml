@@ -1,0 +1,147 @@
+@{
+    ViewData["Title"] = "Advanced Analytics";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4 animate-fade-in stagger-1">
+    <div>
+        <h3 class="fw-bold mb-1 text-dark">Advanced Analytics</h3>
+        <p class="text-muted mb-0">Detailed insights and attendance patterns</p>
+    </div>
+    
+    <div class="btn-group" role="group" aria-label="Time period">
+        <button type="button" class="btn btn-outline-secondary bg-white text-dark fw-medium" style="border-radius: 6px 0 0 6px;">7 Days</button>
+        <button type="button" class="btn btn-primary fw-medium border-primary">30 Days</button>
+        <button type="button" class="btn btn-outline-secondary bg-white text-dark fw-medium" style="border-radius: 0 6px 6px 0;">90 Days</button>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row g-4 mb-4 animate-fade-in stagger-2">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Avg. Attendance</div>
+                    <h3 class="fw-bold mb-0">39.6%</h3>
+                </div>
+                <div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-people-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Trend</div>
+                    <h3 class="fw-bold mb-0 text-success">+79.2%</h3>
+                </div>
+                <div>
+                    <div class="bg-success bg-opacity-10 text-success rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-graph-up-arrow fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Total Records</div>
+                    <h3 class="fw-bold mb-0">112</h3>
+                </div>
+                <div>
+                    <div style="background-color: #f3e8ff; color: #9333ea;" class="rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-clock-history fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1">Late Arrivals</div>
+                    <h3 class="fw-bold mb-0" style="color: #f59e0b;">22</h3>
+                </div>
+                <div>
+                    <div style="background-color: #fef3c7; color: #d97706;" class="rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-exclamation-circle fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Area Chart -->
+<div class="card border-0 shadow-sm p-4 animate-fade-in stagger-3" style="border-radius: 12px;">
+    <h6 class="fw-bold mb-4">Attendance Rate Over Time</h6>
+    <div style="height: 400px; width: 100%;">
+        <canvas id="areaChart"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('.sidebar-nav .nav-link[href="/Admin/Analytics"]')?.classList.add('active');
+
+            Chart.defaults.font.family = "'Outfit', sans-serif";
+            
+            const areaCtx = document.getElementById('areaChart').getContext('2d');
+            
+            // Create a gradient fill
+            const gradient = areaCtx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)'); // Light blue transparent top
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');   // Fade to nothing bottom
+            
+            new Chart(areaCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Feb 16', 'Feb 18', 'Feb 20', 'Feb 22', 'Feb 24', 'Feb 26', 'Feb 28', 'Mar 2', 'Mar 4', 'Mar 6', 'Mar 8', 'Mar 10', 'Mar 12', 'Mar 14', 'Mar 16'],
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 100, 60, 100, 60, 100, 60, 100, 60], // Simulated pattern matching screenshot
+                        fill: true,
+                        backgroundColor: gradient,
+                        borderColor: '#3b82f6', // solid blue line
+                        borderWidth: 2,
+                        tension: 0.4, // smooth area curve
+                        pointRadius: 0 // Hide points to match screenshot
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { 
+                                stepSize: 25, 
+                                callback: function(value) { return value + "%"; },
+                                color: '#9ca3af'
+                            },
+                            grid: { color: '#f3f4f6', borderDash: [5, 5] }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af', maxTicksLimit: 15 },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

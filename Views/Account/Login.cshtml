@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Login - Intelligent Attendance";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center mt-5 animate-fade-in">
+    <div class="col-md-8 col-lg-5">
+        <div class="card">
+            <div class="card-header border-0 pt-5 pb-2 text-center">
+                <div class="mb-3 d-inline-flex p-3 rounded-circle bg-primary bg-opacity-10">
+                    <i class="bi bi-shield-lock-fill text-primary" style="font-size: 2.5rem;"></i>
+                </div>
+                <h3 class="mb-0 fw-bold">Welcome Back</h3>
+                <p class="text-muted small mt-2">Sign in to your intelligent portal.</p>
+            </div>
+            <div class="card-body p-5 pt-3">
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-floating mb-4">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                        <label for="email" class="text-muted"><i class="bi bi-envelope me-2"></i>Email address</label>
+                    </div>
+
+                    <div class="form-floating mb-5">
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="Student" selected>Student</option>
+                            <option value="Admin">Admin / Teacher</option>
+                        </select>
+                        <label for="role" class="text-muted"><i class="bi bi-person-badge me-2"></i>Select Role</label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-lg d-flex align-items-center justify-content-center py-3">
+                            <span class="fs-5 me-2">Login to Account</span>
+                            <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <small class="text-muted">&copy; 2026 Intelligent Analytics System. All rights reserved.</small>
+        </div>
+    </div>
+</div>

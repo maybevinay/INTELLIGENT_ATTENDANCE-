@@ -1,0 +1,136 @@
+@{
+    ViewData["Title"] = "Admin Scanner";
+}
+
+<div class="row mb-5 animate-fade-in stagger-1">
+    <div class="col-12 text-center">
+        <h2 class="display-5 fw-bold text-primary-gradient mb-3"><i class="bi bi-camera me-2"></i>Intelligent Capture</h2>
+        <p class="lead text-muted">Align the student's face in the frame below and click Capture to mark attendance.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center animate-fade-in stagger-2">
+    <div class="col-md-9 col-lg-7">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-webcam text-primary me-2"></i>Live Scanner</h5>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+                    <i class="bi bi-record-circle-fill me-1"></i> System Active
+                </span>
+            </div>
+            
+            <div class="card-body p-4 text-center">
+                <!-- Camera Video Stream -->
+                <div class="bg-dark rounded-4 mb-4 overflow-hidden position-relative shadow-sm" style="aspect-ratio: 16/10; width: 100%; border: 4px solid rgba(255,255,255,0.1);">
+                    <video id="videoElement" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    
+                    <!-- Scanning Overlay Overlay -->
+                    <div id="scanOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-none" style="background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; transition: all 0.3s ease;">
+                        <div class="position-absolute top-50 start-50 translate-middle text-success fw-bold text-center">
+                            <i class="bi bi-upc-scan mb-2" style="font-size: 4rem; filter: drop-shadow(0 0 10px rgba(16,185,129,0.5));"></i><br/>
+                            <span class="fs-4 ls-wider text-uppercase border bg-dark bg-opacity-75 px-3 py-1 rounded">Analyzing Face...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="captureBtn" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow w-100 d-flex align-items-center justify-content-center fs-5">
+                    <i class="bi bi-camera-fill me-2 fs-4"></i> Capture & Match Student
+                </button>
+            </div>
+            
+            <div class="card-footer bg-white border-0 pb-4 px-4">
+                <div id="resultMessage" class="alert d-none shadow-sm rounded-3 border-0 mt-2" role="alert" style="font-weight: 500;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden canvas for image capture -->
+<canvas id="canvasElement" class="d-none"></canvas>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvasElement');
+            const captureBtn = document.getElementById('captureBtn');
+            const resultMessage = document.getElementById('resultMessage');
+            const scanOverlay = document.getElementById('scanOverlay');
+
+            function showResult(type, message) {
+                resultMessage.className = `alert alert-${type} alert-dismissible fade show animate-fade-in`;
+                let icon = type === 'success' ? 'check-circle-fill' : (type === 'danger' ? 'x-circle-fill' : 'exclamation-triangle-fill');
+                resultMessage.innerHTML = `<i class="bi bi-${icon} me-2 fs-5"></i> ${message} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                resultMessage.classList.remove('d-none');
+            }
+
+            async function startCamera() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                    video.srcObject = stream;
+                    console.log('Camera started successfully.');
+                } catch (err) {
+                    console.error('Camera error:', err);
+                    showResult('danger', 'Camera access failed: ' + err.message + '. Please allow camera permissions.');
+                }
+            }
+
+            captureBtn.addEventListener('click', async () => {
+                if (!video.srcObject) {
+                    showResult('danger', 'Camera not started. Please allow camera access and refresh.');
+                    return;
+                }
+
+                captureBtn.disabled = true;
+                captureBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
+                scanOverlay.classList.remove('d-none');
+                resultMessage.classList.add('d-none');
+
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                try {
+                    const response = await fetch('/Admin/MarkAttendance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ imageBase64: dataUrl })
+                    });
+
+                    console.log('MarkAttendance response status:', response.status);
+
+                    let result;
+                    try {
+                        result = await response.json();
+                    } catch(e) {
+                        result = { success: false, message: `Server returned ${response.status} (${response.statusText})` };
+                    }
+
+                    setTimeout(() => {
+                        scanOverlay.classList.add('d-none');
+                        captureBtn.disabled = false;
+                        captureBtn.innerHTML = '<i class="bi bi-camera-fill me-2 fs-4"></i> Capture & Match Student';
+
+                        if (result.success) {
+                            showResult('success', result.message);
+                        } else {
+                            showResult('warning', result.message || 'Could not mark attendance.');
+                        }
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    scanOverlay.classList.add('d-none');
+                    captureBtn.disabled = false;
+                    captureBtn.innerHTML = '<i class="bi bi-camera-fill me-2 fs-4"></i> Capture & Match Student';
+                    showResult('danger', 'Network error. Is the server running?');
+                }
+            });
+
+            startCamera();
+        });
+    </script>
+}

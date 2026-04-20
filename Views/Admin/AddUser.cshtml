@@ -1,0 +1,266 @@
+@model IntelligentAttendanceSystem.Models.User
+
+@{
+    ViewData["Title"] = "Add New User";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4 animate-fade-in stagger-1">
+    <div>
+        <h3 class="fw-bold mb-1 text-dark">Register New User</h3>
+        <p class="text-muted mb-0">Capture biometric data and create user profile</p>
+    </div>
+    <a href="/Admin/ManageUsers" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm fw-medium">
+        <i class="bi bi-arrow-left me-2"></i> Back to Users
+    </a>
+</div>
+
+<div class="row g-4 animate-fade-in stagger-2">
+    <!-- Left Column: User Details Form -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 12px;">
+            <h5 class="fw-bold mb-4">User Information</h5>
+            
+            <form id="addUserForm">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Full Name</label>
+                    <input type="text" class="form-control bg-light border-0" id="newName" placeholder="e.g. John Doe" required style="border-radius: 8px; padding: 0.6rem 1rem;">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Email Address</label>
+                    <input type="email" class="form-control bg-light border-0" id="newEmail" placeholder="user@example.com" required style="border-radius: 8px; padding: 0.6rem 1rem;">
+                </div>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold">Role</label>
+                        <select class="form-select bg-light border-0" id="newRole" style="border-radius: 8px; padding: 0.6rem 1rem;">
+                            <option value="Student">Student</option>
+                            <option value="Employee">Employee</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold">Department</label>
+                        <select class="form-select bg-light border-0" id="newDept" style="border-radius: 8px; padding: 0.6rem 1rem;">
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 bg-primary bg-opacity-10 text-primary d-flex align-items-center mb-0" style="border-radius: 8px;">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    <small>Biometric data is required to complete registration.</small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Camera Capture -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4 h-100 text-center" style="border-radius: 12px; background-color: #f8fafc;">
+            <h5 class="fw-bold mb-4 text-start">Biometric Capture</h5>
+            
+            <div class="position-relative mx-auto bg-dark rounded overflow-hidden shadow-sm mb-4" 
+                 style="width: 100%; max-width: 480px; aspect-ratio: 4/3;">
+                
+                <video id="videoElement" autoplay playsinline 
+                       style="width: 100%; height: 100%; object-fit: cover;"></video>
+                
+                <!-- Overlay scanner effect -->
+                <div class="position-absolute top-0 start-0 w-100 h-100 pointer-events-none" 
+                     style="background: linear-gradient(to bottom, rgba(59, 130, 246, 0.2), transparent); border: 2px solid rgba(59, 130, 246, 0.5);">
+                     <div class="position-absolute border border-primary opacity-50 scanner-line" style="width: 60%; left: 20%; height: 60%; top: 20%; border-radius: 20px;"></div>
+                </div>
+
+                <!-- Snapshot Overlay (Hidden initially) -->
+                 <img id="snapshotElement" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; display: none;" />
+            </div>
+
+            <!-- Hidden Canvas -->
+            <canvas id="canvasElement" class="d-none"></canvas>
+            
+            <div id="statusMessage" class="alert d-none mb-3 text-start small border-0" style="border-radius: 8px;"></div>
+
+            <div class="d-flex justify-content-center gap-3">
+                <button id="retakeBtn" class="btn btn-outline-secondary px-4 fw-medium flex-grow-1" style="border-radius: 8px; display: none;">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Retake
+                </button>
+                <button id="captureBtn" class="btn btn-primary px-4 shadow-sm fw-medium flex-grow-1" style="border-radius: 8px;">
+                    <i class="bi bi-camera me-1"></i> Capture Face
+                </button>
+                <button id="registerBtn" class="btn btn-success px-4 shadow-sm fw-medium flex-grow-1" disabled style="border-radius: 8px;">
+                    <i class="bi bi-person-check me-1"></i> Register User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Keep Sidebar Active state correct
+            try {
+                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+                const activeLink = document.querySelector('.sidebar-nav .nav-link[href="/Admin/ManageUsers"]');
+                if (activeLink) activeLink.classList.add('active');
+            } catch(e) { console.warn('Sidebar link sync failed'); }
+
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvasElement');
+            const snapshot = document.getElementById('snapshotElement');
+            const captureBtn = document.getElementById('captureBtn');
+            const retakeBtn = document.getElementById('retakeBtn');
+            const registerBtn = document.getElementById('registerBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            let capturedImageBase64 = null;
+            let stream = null;
+
+            function showStatus(text, type) {
+                statusMessage.className = `alert alert-${type} mb-3 text-start small border-0`;
+                statusMessage.textContent = text;
+                statusMessage.classList.remove('d-none');
+            }
+
+            // Start Camera
+            async function startCamera() {
+                console.log('Starting camera...');
+                try {
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    snapshot.style.display = 'none';
+                    captureBtn.style.display = 'inline-block';
+                    retakeBtn.style.display = 'none';
+                    registerBtn.disabled = true;
+                    capturedImageBase64 = null;
+                    console.log('Camera started');
+                } catch (err) {
+                    console.error('Camera Error:', err);
+                    showStatus('Camera access denied or found no device. Biometrics required.', 'danger');
+                }
+            }
+            
+            startCamera();
+
+            // Capture Frame
+            captureBtn.addEventListener('click', () => {
+                try {
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    snapshot.src = capturedImageBase64;
+                    snapshot.style.display = 'block';
+                    video.style.display = 'none';
+                    
+                    captureBtn.style.display = 'none';
+                    retakeBtn.style.display = 'inline-block';
+                    registerBtn.disabled = false;
+                    
+                    showStatus('Biometric scanned successfully. Ready to register.', 'success');
+                } catch (e) {
+                    console.error('Capture failed', e);
+                    showStatus('Capture failed: ' + e.message, 'danger');
+                }
+            });
+
+            // Retake
+            retakeBtn.addEventListener('click', startCamera);
+
+            // Register
+            registerBtn.addEventListener('click', async () => {
+                const name = document.getElementById('newName').value.trim();
+                const email = document.getElementById('newEmail').value.trim();
+                const role = document.getElementById('newRole').value;
+                const dept = document.getElementById('newDept').value;
+                
+                if(!name || !email) {
+                    showStatus('Full Name and Email are required.', 'danger');
+                    return;
+                }
+                
+                if (!capturedImageBase64) {
+                    showStatus('Please capture a face image first.', 'danger');
+                    return;
+                }
+
+                console.log('Sending registration request...');
+                registerBtn.disabled = true;
+                const originalHtml = registerBtn.innerHTML;
+                registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+                try {
+                    // Extract base64 part
+                    const base64Data = capturedImageBase64.split(',')[1];
+                    
+                    const response = await fetch('/Admin/AddUser', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            Name: name,
+                            Email: email,
+                            Role: role,
+                            Department: dept,
+                            ImageBase64: base64Data
+                        })
+                    });
+
+                    console.log('Server responded with status:', response.status);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showStatus(result.message || 'Registration successful!', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/Admin/ManageUsers';
+                        }, 1500);
+                    } else {
+                        let errorMsg = 'Error saving user';
+                        try {
+                            const errorResult = await response.json();
+                            errorMsg = errorResult.message || errorMsg;
+                        } catch(e) { 
+                            errorMsg += ` (${response.status})`;
+                        }
+                        showStatus(errorMsg, 'danger');
+                        registerBtn.disabled = false;
+                        registerBtn.innerHTML = originalHtml;
+                    }
+                } catch (error) {
+                    console.error('Registration fetch error:', error);
+                    showStatus('Network error or server unavailable. Please try again.', 'danger');
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = originalHtml;
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                if (stream) stream.getTracks().forEach(t => t.stop());
+            });
+        });
+    </script>
+    <style>
+        .scanner-line {
+            animation: scan 2s linear infinite;
+        }
+        @@keyframes scan {
+            0% { transform: translateY(-30%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(30%); opacity: 0; }
+        }
+    </style>
+}

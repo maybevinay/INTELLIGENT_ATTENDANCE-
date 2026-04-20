@@ -1,0 +1,187 @@
+@{
+    ViewData["Title"] = "Dashboard Overview";
+    // Mock Data based on the UI screenshot
+    var totalUsers = 8;
+    var presentToday = 2;
+    var absentToday = 0;
+    var attendanceRate = 38.3;
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4 animate-fade-in stagger-1">
+    <div>
+        <h3 class="fw-bold mb-1 text-dark">Dashboard Overview</h3>
+        <p class="text-muted mb-0">Real-time attendance monitoring and analytics</p>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4 animate-fade-in stagger-2">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small mb-1">Total Users</div>
+                    <h2 class="fw-bold mb-0">@totalUsers</h2>
+                </div>
+                <div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-people-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small mb-1">Present Today</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h2 class="fw-bold mb-0 text-success">@presentToday</h2>
+                    </div>
+                    <small class="text-muted" style="font-size: 0.75rem;">+3 late arrivals</small>
+                </div>
+                <div>
+                    <div class="bg-success bg-opacity-10 text-success rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-check-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small mb-1">Absent Today</div>
+                    <h2 class="fw-bold mb-0 text-danger">@absentToday</h2>
+                    <small class="text-muted" style="font-size: 0.75rem;">0% of total</small>
+                </div>
+                <div>
+                    <div class="bg-danger bg-opacity-10 text-danger rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-x-fill fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-3" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small mb-1">Attendance Rate</div>
+                    <h2 class="fw-bold mb-0">@attendanceRate%</h2>
+                    <small class="text-muted" style="font-size: 0.75rem;">Last 30 days</small>
+                </div>
+                <div>
+                    <div style="background-color: #f3e8ff; color: #9333ea;" class="rounded p-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-graph-up-arrow fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4 animate-fade-in stagger-3">
+    <!-- Line Chart Trend -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 12px;">
+            <h6 class="fw-bold mb-4">7-Day Attendance Trend</h6>
+            <div style="height: 300px; width: 100%;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie Chart Distribution -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 12px;">
+            <h6 class="fw-bold mb-4">Today's Status Distribution</h6>
+            <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+                <canvas id="distributionChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set active navigation link
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('.sidebar-nav .nav-link[href="/Admin/DashboardOverview"]')?.classList.add('active');
+
+            Chart.defaults.font.family = "'Outfit', sans-serif";
+            
+            // 7-Day Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue'],
+                    datasets: [{
+                        label: 'Present Students',
+                        data: [4, 7, 3, 5, 6, 5, 2],
+                        borderColor: '#ef4444', // Red-ish line matching the screenshot
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.4, // Smooth curve
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#ef4444',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 8,
+                            ticks: { stepSize: 2, color: '#9ca3af' },
+                            grid: { color: '#f3f4f6', borderDash: [5, 5] }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Status Distribution Pie Chart
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            new Chart(distCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Present', 'Late', 'Absent'],
+                    datasets: [{
+                        data: [2, 3, 0],
+                        backgroundColor: [
+                            '#10b981', // green
+                            '#f59e0b', // orange
+                            '#ef4444'  // red
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false } // Hidden to match screenshot style
+                    }
+                }
+            });
+        });
+    </script>
+}

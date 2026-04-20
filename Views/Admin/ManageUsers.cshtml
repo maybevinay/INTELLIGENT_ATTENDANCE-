@@ -1,0 +1,116 @@
+@model IEnumerable<IntelligentAttendanceSystem.Models.User>
+
+@{
+    ViewData["Title"] = "Manage Users";
+}
+<style>
+    .bg-indigo { background-color: #6366f1; color: white; }
+    .bg-purple { background-color: #8b5cf6; color: white; }
+    .bg-blue { background-color: #3b82f6; color: white; }
+    .role-badge-student { background-color: #e0e7ff; color: #4338ca; }
+    .role-badge-employee { background-color: #f3e8ff; color: #7e22ce; }
+</style>
+
+<div class="d-flex justify-content-between align-items-end mb-4 animate-fade-in stagger-1">
+    <div>
+        <h3 class="fw-bold mb-1 text-dark">Manage Users</h3>
+        <p class="text-muted mb-0">Add, edit, or remove users from the system</p>
+    </div>
+    <div>
+        <a href="/Admin/AddUser" class="btn btn-primary rounded-pill px-4 shadow-sm fw-medium">
+            <i class="bi bi-person-plus-fill me-2"></i> Add User
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm animate-fade-in stagger-2" style="border-radius: 12px;">
+    <!-- Search Bar inside Card -->
+    <div class="p-4 border-bottom">
+        <div class="input-group" style="max-width: 100%;">
+            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3" style="border-radius: 10px 0 0 10px;">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control border-start-0 ps-0" placeholder="Search users by name, email, or department..." style="border-radius: 0 10px 10px 0; box-shadow: none;">
+        </div>
+    </div>
+
+    <!-- User Table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead style="background-color: #fafafa;">
+                <tr>
+                    <th class="ps-4 text-muted small fw-bold lh-lg py-3 border-0" style="letter-spacing: 0.05em;">NAME</th>
+                    <th class="text-muted small fw-bold lh-lg py-3 border-0" style="letter-spacing: 0.05em;">EMAIL</th>
+                    <th class="text-muted small fw-bold lh-lg py-3 border-0" style="letter-spacing: 0.05em;">ROLE</th>
+                    <th class="text-muted small fw-bold lh-lg py-3 border-0" style="letter-spacing: 0.05em;">DEPARTMENT</th>
+                    <th class="pe-4 text-end text-muted small fw-bold lh-lg py-3 border-0" style="letter-spacing: 0.05em;">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                @if(!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No users found. Click 'Add User' to register someone.</td>
+                    </tr>
+                }
+                @foreach (var u in Model)
+                {
+                    var initial = u.Name?.Substring(0, 1).ToUpper() ?? "U";
+                    var colorClass = u.Role == "Admin" ? "bg-danger" : (u.Role == "Employee" ? "bg-indigo" : "bg-primary");
+
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 @colorClass text-white" style="width: 40px; height: 40px; font-weight: 500;">
+                                    @initial
+                                </div>
+                                <span class="fw-bold text-dark">@u.Name</span>
+                            </div>
+                        </td>
+                        <td class="text-muted">@u.Email</td>
+                        <td>
+                            <span class="badge rounded-pill px-3 py-1 fw-medium @(u.Role == "Student" ? "role-badge-student" : "role-badge-employee")">
+                                @u.Role
+                            </span>
+                        </td>
+                        <td class="text-muted">@(u.Department ?? "General")</td>
+                        <td class="pe-4 text-end">
+                            <a href="/Admin/EditUser/@u.Id" class="btn btn-sm btn-light text-primary rounded-circle me-1" style="width: 32px; height: 32px;" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <button onclick="deleteUser(@u.Id, '@u.Name')" class="btn btn-sm btn-light text-danger rounded-circle" style="width: 32px; height: 32px;" title="Delete"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('.sidebar-nav .nav-link[href="/Admin/ManageUsers"]')?.classList.add('active');
+        });
+
+        async function deleteUser(id, name) {
+            if (confirm(`Are you sure you want to delete user "${name}"?`)) {
+                try {
+                    const response = await fetch(`/Admin/DeleteUser/${id}`, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (response.ok || response.redirected) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting user.');
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    alert('Network error.');
+                }
+            }
+        }
+    </script>
+}
+

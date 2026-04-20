@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4 animate-fade-in stagger-1">
+    <div>
+        <h3 class="fw-bold mb-1 text-dark">Reports</h3>
+        <p class="text-muted mb-0">Generate detailed attendance reports</p>
+    </div>
+    <div>
+        <a href="@Url.Action("ExportRecords", "Admin")" class="btn btn-success text-white rounded-pill px-4 shadow-sm fw-medium">
+            <i class="bi bi-download me-2"></i> Export Report
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 mb-4 animate-fade-in stagger-2" style="border-radius: 12px;">
+    <h6 class="fw-bold mb-3">Report Configuration</h6>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label text-muted small fw-bold" style="letter-spacing: 0.05em;">Report Type</label>
+            <select class="form-select bg-light border-0" style="border-radius: 8px;">
+                <option selected>Summary Report</option>
+                <option>Detailed Report</option>
+                <option>Exception Report</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-muted small fw-bold" style="letter-spacing: 0.05em;">Date Range</label>
+            <select class="form-select bg-light border-0" style="border-radius: 8px;">
+                <option selected>Last 30 Days</option>
+                <option>This Week</option>
+                <option>This Month</option>
+                <option>Custom Range...</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4 animate-fade-in stagger-3">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-muted small mb-1">Total Records</div>
+                    <h2 class="fw-bold mb-0">112</h2>
+                </div>
+                <div class="text-muted">
+                    <i class="bi bi-file-earmark-text fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border border-success border-opacity-25 bg-success bg-opacity-10 shadow-sm h-100 p-4" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-success small mb-1">Present</div>
+                    <h2 class="fw-bold mb-0 text-success">77</h2>
+                </div>
+                <div class="text-success">
+                    <i class="bi bi-graph-up-arrow fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border border-warning border-opacity-25 shadow-sm h-100 p-4" style="border-radius: 12px; background-color: #fefce8;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-warning small mb-1" style="color: #ca8a04 !important;">Late</div>
+                    <h2 class="fw-bold mb-0" style="color: #ca8a04;">16</h2>
+                </div>
+                <div style="color: #ca8a04;">
+                    <i class="bi bi-exclamation-circle fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border border-danger border-opacity-25 bg-danger bg-opacity-10 shadow-sm h-100 p-4" style="border-radius: 12px;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="text-danger small mb-1">Absent</div>
+                    <h2 class="fw-bold mb-0 text-danger">19</h2>
+                </div>
+                <div class="text-danger">
+                    <i class="bi bi-calendar-x fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm p-4 animate-fade-in stagger-4" style="border-radius: 12px; background-color: #f0fdfa;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <div class="text-primary small fw-medium mb-1">Average Attendance Rate</div>
+            <h2 class="fw-bold mb-0 text-primary">83.0%</h2>
+        </div>
+        <div class="text-primary fs-3">
+            <i class="bi bi-graph-up"></i>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector('.sidebar-nav .nav-link[href="/Admin/Reports"]')?.classList.add('active');
+        });
+    </script>
+}

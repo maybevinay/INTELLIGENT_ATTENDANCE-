@@ -1,0 +1,146 @@
+@model IEnumerable<IntelligentAttendanceSystem.Models.AttendanceRecord>
+@{
+    ViewData["Title"] = "Student Analytics";
+}
+
+<div class="row align-items-center mb-5 animate-fade-in stagger-1">
+    <div class="col-md-7">
+        <h2 class="display-6 fw-bold text-primary-gradient mb-2"><i class="bi bi-bar-chart-steps me-2"></i>My Analytics</h2>
+        <p class="text-muted fs-5">Track your classroom presence over the past 30 days.</p>
+    </div>
+    <div class="col-md-5 text-end mt-4 mt-md-0">
+        <div class="card bg-primary text-white shadow border-0" style="background: var(--primary-gradient) !important;">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div class="text-start">
+                    <h5 class="mb-1 text-white-50 fw-normal">Overall Attendance</h5>
+                    <div class="small">Target: 75% or higher</div>
+                </div>
+                <h1 class="fw-bold mb-0 display-4">@ViewBag.AttendanceRate%</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row animate-fade-in stagger-2">
+    <!-- Analytics Chart -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-2 px-4">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-pie-chart-fill text-primary me-2"></i> 30-Day Presence</h5>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center p-4">
+                <div style="width: 100%; max-width: 300px;">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History Table -->
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history text-primary me-2"></i> Recent History</h5>
+                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-funnel"></i> Last 30 Days</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="ps-4 text-muted fw-semibold">Date & Time</th>
+                                <th class="pe-4 text-end text-muted fw-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-5">
+                                        <i class="bi bi-inbox fs-2 mb-2 d-block"></i>
+                                        No recent records found.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var record in Model)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-medium text-dark">@record.Timestamp.ToString("ddd, MMM dd yyyy - HH:mm tt")</td>
+                                        <td class="pe-4 text-end">
+                                            @if (record.Status == "Present")
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Present
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">
+                                                    <i class="bi bi-x-circle-fill me-1"></i> Absent
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            
+            const presentCount = @ViewBag.PresentCount;
+            const absentCount = @ViewBag.AbsentCount;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present Days', 'Absent Days'],
+                    datasets: [{
+                        data: [presentCount, absentCount],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.9)', // Emerald
+                            'rgba(239, 68, 68, 0.9)'  // Red
+                        ],
+                        borderColor: [
+                            '#ffffff',
+                            '#ffffff'
+                        ],
+                        borderWidth: 3,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    family: "'Outfit', sans-serif",
+                                    size: 14
+                                }
+                            }
+                        }
+                    },
+                    cutout: '75%',
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        });
+    </script>
+}
